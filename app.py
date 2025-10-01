@@ -1,4 +1,5 @@
 import os
+import time
 import streamlit as st
 from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
@@ -47,11 +48,11 @@ if "selected_subject" not in st.session_state or st.session_state.selected_subje
     greeting = f"👋 Hello! I’m your Study Buddy for **{subject}**. What would you like to start with?"
     st.session_state.messages.append(AIMessage(content=greeting))
 
-# Display chat history
+# Display chat history (skip system messages)
 for msg in st.session_state.messages:
     if isinstance(msg, SystemMessage):
-        continue  
-    role = "assistant" if isinstance(msg, (AIMessage, SystemMessage)) else "user"
+        continue
+    role = "assistant" if isinstance(msg, AIMessage) else "user"
     st.chat_message(role).markdown(msg.content)
 
 # User input
@@ -61,8 +62,20 @@ if prompt := st.chat_input(f"Ask me anything about {subject}..."):
     st.session_state.messages.append(user_message)
     st.chat_message("user").markdown(prompt)
 
-    # Get AI response
-    response = conversation.invoke(input=st.session_state.messages)
-    ai_message = AIMessage(content=response.content)
-    st.session_state.messages.append(ai_message)
-    st.chat_message("assistant").markdown(response.content)
+    # Assistant "typing..." placeholder
+    with st.chat_message("assistant"):
+        placeholder = st.empty()
+        placeholder.markdown("⏳ Assistant is typing...")
+
+        # Get AI response
+        response = conversation.invoke(input=st.session_state.messages)
+        ai_message = AIMessage(content=response.content)
+        st.session_state.messages.append(ai_message)
+
+        # Simulate streaming (progressive output)
+        response_text = response.content
+        streamed_text = ""
+        for chunk in response_text.split():
+            streamed_text += chunk + " "
+            placeholder.markdown(streamed_text)
+            time.sleep(0.05)  # adjust typing speed here
