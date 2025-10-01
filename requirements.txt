@@ -1,0 +1,14 @@
+# Langchain
+langchain
+langchain-core
+
+# Hugging Face
+langchain-huggingface
+transformers
+huggingface-hub
+
+# UI Library
+streamlit
+
+# Other dependencies
+python-dotenv
